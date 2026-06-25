@@ -1,0 +1,147 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+const VERSION = "v0.1.0"
+
+func main() {
+	var (
+		editCfg  bool
+		editName string
+		showVer  bool
+	)
+	flag.BoolVar(&editCfg, "c", false, "edit cnfgr's own config")
+	flag.StringVar(&editName, "e", "", "open a specific config file")
+	flag.BoolVar(&showVer, "v", false, "show version")
+	flag.Parse()
+
+	switch {
+	case showVer:
+		fmt.Println(VERSION)
+		return
+	case editCfg:
+		editConfig()
+		return
+	case editName != "":
+		editByName(editName)
+		return
+	}
+	runTUI()
+}
+
+func editByName(name string) {
+	cfg, _, err := loadConfig()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error loading config:", err)
+		os.Exit(1)
+	}
+	for _, cat := range cfg.Categories {
+		for _, prog := range cat.Programs {
+			if prog.Name == name {
+				if err := openFile(prog.Path, prog.Root, editorFor(prog, cfg.Editor)); err != nil {
+					fmt.Fprintln(os.Stderr, "error:", err)
+					os.Exit(1)
+				}
+				return
+			}
+		}
+	}
+	fmt.Fprintln(os.Stderr, "no config named:", name)
+	os.Exit(1)
+}
+
+func editConfig() {
+	cfg, p, err := loadConfig()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error loading config:", err)
+		os.Exit(1)
+	}
+	if err := openFile(p, false, resolveEditor(cfg.Editor)); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+}
+
+func runTUI() {
+	cfg, cfgPath, err := loadConfig()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error loading config:", err)
+		os.Exit(1)
+	}
+	p := tea.NewProgram(initialModel(cfg, cfgPath), tea.WithAltScreen())
+	final, err := p.Run()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+	m, _ := final.(model)
+	switch {
+	case m.editCfg:
+		err = openFile(cfgPath, false, resolveEditor(cfg.Editor))
+	case m.picked != nil:
+		ed := editorFor(m.picked.program, cfg.Editor)
+		if m.editorOverride != "" {
+			ed = m.editorOverride
+		}
+		err = openFile(m.picked.program.Path, m.picked.program.Root, ed)
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+}
+
+func editorFor(prog Program, cfgEditor string) string {
+	if prog.Editor != "" {
+		return prog.Editor
+	}
+	return resolveEditor(cfgEditor)
+}
+
+func resolveEditor(cfgEditor string) string {
+	if cfgEditor != "" {
+		return cfgEditor
+	}
+	if e := os.Getenv("EDITOR"); e != "" {
+		return e
+	}
+	if _, err := exec.LookPath("nano"); err == nil {
+		return "nano"
+	}
+	return "vi"
+}
+
+func expandPath(p string) string {
+	if strings.HasPrefix(p, "~/") {
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, p[2:])
+	}
+	if p == "~" {
+		home, _ := os.UserHomeDir()
+		return home
+	}
+	return os.ExpandEnv(p)
+}
+
+func openFile(path string, root bool, editor string) error {
+	path = expandPath(path)
+	var cmd *exec.Cmd
+	if root {
+		cmd = exec.Command("sudo", editor, path)
+	} else {
+		cmd = exec.Command(editor, path)
+	}
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
