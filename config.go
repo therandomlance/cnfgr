@@ -21,8 +21,9 @@ type Category struct {
 }
 
 type Config struct {
-	Editor     string     `toml:"editor"`
-	Categories []Category `toml:"category"`
+	DefaultEditor    string     `toml:"default_editor"`    // editor used when no per-program override is set
+	AvailableEditors []string   `toml:"available_editors"` // editors shown in the TUI picker (press 'e')
+	Categories       []Category `toml:"category"`
 }
 
 func configPath() (string, error) {
@@ -60,7 +61,11 @@ func writeDefaultConfig(p string) error {
 const defaultConfig = `# cnfgr configuration
 # Edit freely. Run "cnfgr config" or press 'c' in the TUI to reopen.
 
-editor = "nano"
+# default_editor: editor used when no per-program override is set
+default_editor = "nano"
+
+# available_editors: editors shown in the TUI picker (press 'e')
+available_editors = ["nano", "vim"]
 
 # Each [[category]] groups its [[category.program]] entries.
 # Fields per program:

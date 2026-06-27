@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os/exec"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -30,12 +29,6 @@ const (
 	modeList mode = iota
 	modeEditor
 )
-
-var commonEditors = []string{
-	"nano", "vim", "vi", "nvim", "emacs", "micro", "hx", "kak",
-	"code", "subl", "kate", "gedit", "mousepad", "featherpad",
-	"pluma", "xed", "leafpad", "geany", "neovim",
-}
 
 type model struct {
 	cfg            *Config
@@ -103,10 +96,8 @@ func (m model) updateList(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, tea.Quit
 	case "ctrl+enter", "e":
-		// Most terminals send the same byte for Enter and Ctrl+Enter,
-		// so 'e' is the primary binding; ctrl+enter kept as a fallback.
-		if len(m.items) > 0 {
-			m.editors = availableEditors()
+		if len(m.items) > 0 && len(m.cfg.AvailableEditors) > 0 {
+			m.editors = m.cfg.AvailableEditors
 			m.editorSel = 0
 			m.mode = modeEditor
 			return m, tea.ClearScreen
@@ -166,19 +157,6 @@ func (m *model) jumpCategory(dir int) {
 		}
 		m.selected = 0
 	}
-}
-
-func availableEditors() []string {
-	var found []string
-	for _, e := range commonEditors {
-		if _, err := exec.LookPath(e); err == nil {
-			found = append(found, e)
-		}
-	}
-	if len(found) == 0 {
-		found = []string{"nano", "vi"}
-	}
-	return found
 }
 
 func (m model) View() string {

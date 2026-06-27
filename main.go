@@ -47,7 +47,7 @@ func editByName(name string) {
 	for _, cat := range cfg.Categories {
 		for _, prog := range cat.Programs {
 			if prog.Name == name {
-				if err := openFile(prog.Path, prog.Root, editorFor(prog, cfg.Editor)); err != nil {
+				if err := openFile(prog.Path, prog.Root, editorFor(prog, cfg.DefaultEditor)); err != nil {
 					fmt.Fprintln(os.Stderr, "error:", err)
 					os.Exit(1)
 				}
@@ -65,7 +65,7 @@ func editConfig() {
 		fmt.Fprintln(os.Stderr, "error loading config:", err)
 		os.Exit(1)
 	}
-	if err := openFile(p, false, resolveEditor(cfg.Editor)); err != nil {
+	if err := openFile(p, false, resolveEditor(cfg.DefaultEditor)); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
@@ -86,9 +86,9 @@ func runTUI() {
 	m, _ := final.(model)
 	switch {
 	case m.editCfg:
-		err = openFile(cfgPath, false, resolveEditor(cfg.Editor))
+		err = openFile(cfgPath, false, resolveEditor(cfg.DefaultEditor))
 	case m.picked != nil:
-		ed := editorFor(m.picked.program, cfg.Editor)
+		ed := editorFor(m.picked.program, cfg.DefaultEditor)
 		if m.editorOverride != "" {
 			ed = m.editorOverride
 		}
