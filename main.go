@@ -120,20 +120,30 @@ func resolveEditor(cfgEditor string) string {
 	return "vi"
 }
 
-func expandPath(p string) string {
+func expandPath(p string) (string, error) {
 	if strings.HasPrefix(p, "~/") {
-		home, _ := os.UserHomeDir()
-		return filepath.Join(home, p[2:])
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, p[2:]), nil
 	}
 	if p == "~" {
-		home, _ := os.UserHomeDir()
-		return home
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return home, nil
 	}
-	return os.ExpandEnv(p)
+	return os.ExpandEnv(p), nil
 }
 
 func openFile(path string, root bool, editor string) error {
-	path = expandPath(path)
+	var err error
+	path, err = expandPath(path)
+	if err != nil {
+		return err
+	}
 	var cmd *exec.Cmd
 	if root {
 		cmd = exec.Command("sudo", editor, path)
