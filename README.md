@@ -5,7 +5,7 @@ A TUI for quickly opening config files. Browse categorized configs with keyboard
 ## Requirements
 
 - Linux or macOS
-- Go 1.21+ (to build from source)
+- Go 1.21+
 
 ## Install
 
@@ -17,4 +17,10 @@ cd cnfgr
 
 ## Configure
 
-Config lives at `~/.config/cnfgr/config.toml`. A default is created on first run.
+Config lives at `~/.config/cnfgr/config.toml`.
+
+```sh
+# cnfgr opens its own config file
+# Default editor on install: nano
+cnfgr -c
+```
