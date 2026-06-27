@@ -18,15 +18,20 @@ func main() {
 		editCfg  bool
 		editName string
 		showVer  bool
+		initCfg  bool
 	)
 	flag.BoolVar(&editCfg, "c", false, "edit cnfgr's own config")
 	flag.StringVar(&editName, "e", "", "open a specific config file")
 	flag.BoolVar(&showVer, "v", false, "show version")
+	flag.BoolVar(&initCfg, "init", false, "create the default config if it does not exist")
 	flag.Parse()
 
 	switch {
 	case showVer:
 		fmt.Println(VERSION)
+		return
+	case initCfg:
+		initConfig()
 		return
 	case editCfg:
 		editConfig()
@@ -57,6 +62,23 @@ func editByName(name string) {
 	}
 	fmt.Fprintln(os.Stderr, "no config named:", name)
 	os.Exit(1)
+}
+
+func initConfig() {
+	p, err := configPath()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+	if _, err := os.Stat(p); err == nil {
+		fmt.Println("config already exists:", p)
+		return
+	}
+	if err := writeDefaultConfig(p); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("created config:", p)
 }
 
 func editConfig() {

@@ -39,11 +39,6 @@ func loadConfig() (*Config, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	if _, err := os.Stat(p); os.IsNotExist(err) {
-		if err := writeDefaultConfig(p); err != nil {
-			return nil, p, err
-		}
-	}
 	var cfg Config
 	if _, err := toml.DecodeFile(p, &cfg); err != nil {
 		return nil, p, err

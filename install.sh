@@ -6,6 +6,7 @@ INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 mkdir -p "$INSTALL_DIR"
 cp "$DIR/cnfgr" "$INSTALL_DIR/cnfgr"
 chmod +x "$INSTALL_DIR/cnfgr"
+"$INSTALL_DIR/cnfgr" -init
 echo "Installed to $INSTALL_DIR/cnfgr"
 case ":$PATH:" in
     *":$INSTALL_DIR:"*) ;;
