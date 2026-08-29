@@ -17,10 +17,8 @@ cd cnfgr
 
 ## Configure
 
-Config lives at `~/.config/cnfgr/config.toml`.
+Config lives at `~/.config/cnfgr/config.toml`. cnfgr can open its own config file, the default editor is `nano`.
 
 ```sh
-# cnfgr opens its own config file
-# Default editor on install: nano
 cnfgr -c
 ```
