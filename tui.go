@@ -72,12 +72,12 @@ func (m model) updateList(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c", "q", "esc":
 		return m, tea.Quit
 	case "up", "k":
-		if m.selected > 0 {
-			m.selected--
+		if len(m.items) > 0 {
+			m.selected = (m.selected - 1 + len(m.items)) % len(m.items)
 		}
 	case "down", "j":
-		if m.selected < len(m.items)-1 {
-			m.selected++
+		if len(m.items) > 0 {
+			m.selected = (m.selected + 1) % len(m.items)
 		}
 	case "home", "g":
 		m.selected = 0
@@ -134,29 +134,27 @@ func (m model) updateEditor(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) jumpCategory(dir int) {
-	if len(m.items) == 0 {
+	n := len(m.items)
+	if n == 0 {
 		return
 	}
 	curCat := m.items[m.selected].category
-	if dir > 0 {
-		for i := m.selected + 1; i < len(m.items); i++ {
-			if m.items[i].category != curCat {
-				m.selected = i
-				return
-			}
+	i := m.selected
+	for {
+		i = (i + dir + n) % n
+		if m.items[i].category != curCat {
+			break
 		}
-	} else {
-		for i := m.selected - 1; i >= 0; i-- {
-			if m.items[i].category != curCat {
-				for j := i; j > 0 && m.items[j-1].category == m.items[i].category; j-- {
-					i = j - 1
-				}
-				m.selected = i
-				return
-			}
+		if i == m.selected { // single category, nowhere to go
+			return
 		}
-		m.selected = 0
 	}
+	if dir < 0 {
+		for j := i; j > 0 && m.items[j-1].category == m.items[i].category; j-- {
+			i = j - 1
+		}
+	}
+	m.selected = i
 }
 
 func (m model) View() string {
