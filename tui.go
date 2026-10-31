@@ -202,7 +202,7 @@ func (m model) viewList() string {
 func (m model) viewEditor() string {
 	var b strings.Builder
 	b.WriteString(titleStyl.Render(" cnfgr ") + " " + modeStyle.Render("[ pick editor ]") + "\n\n")
-	b.WriteString(helpStyle.Render(fmt.Sprintf("Opening: %s\n\n", m.items[m.selected].program.Name)))
+	b.WriteString(helpStyle.Render(fmt.Sprintf("Opening: %s", m.items[m.selected].program.Name)) + "\n\n")
 	for i, e := range m.editors {
 		marker := "  "
 		name := e

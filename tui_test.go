@@ -1,10 +1,23 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+func TestEditorListAlignment(t *testing.T) {
+	m := model{
+		mode:    modeEditor,
+		items:   []listItem{{program: Program{Name: "fish"}}},
+		editors: []string{"nano", "kate"},
+	}
+	want := "\n\n▶ " + selStyle.Render("nano") + "\n  kate\n"
+	if got := m.View(); !strings.Contains(got, want) {
+		t.Errorf("editor list is misaligned: got %q, want substring %q", got, want)
+	}
+}
 
 func catItems(cats ...string) []listItem {
 	var items []listItem
